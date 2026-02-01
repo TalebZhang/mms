@@ -135,6 +135,11 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: '服务器内部错误' });
 });
+
+// 确保根路径返回 mms.html
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/mms.html');
+});
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log('服务器运行在 http://localhost:3000');
@@ -148,3 +153,4 @@ process.on('SIGINT', () => {
     process.exit(0);
 
 });
+
