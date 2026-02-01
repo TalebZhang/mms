@@ -135,8 +135,8 @@ app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: '服务器内部错误' });
 });
-
-app.listen(3000, () => {
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
     console.log('服务器运行在 http://localhost:3000');
     console.log('SQLite 数据库文件: messages.db');
 });
@@ -146,4 +146,5 @@ process.on('SIGINT', () => {
     db.close();
     console.log('已关闭数据库连接');
     process.exit(0);
+
 });
