@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言墙</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        .header {
+            padding: 24px 24px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .count {
+            color: #ff2442;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .input-section {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .name-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        .name-input:focus {
+            outline: none;
+            border-color: #ff2442;
+        }
+        
+        .message-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .message-input:focus {
+            outline: none;
+            border-color: #ff2442;
+        }
+        
+        .submit-btn {
+            background: linear-gradient(135deg, #ff2442, #ff5777);
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 20px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 12px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            float: right;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 36, 66, 0.2);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .messages-section {
+            padding: 16px 24px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state .hint {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .message-card {
+            padding: 16px 0;
+            border-bottom: 1px solid #f5f5f5;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .message-card:last-child {
+            border-bottom: none;
+        }
+        
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff5777, #ff2442);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .username {
+            font-weight: 600;
+            font-size: 15px;
+            color: #1a1a1a;
+            margin-bottom: 2px;
+        }
+        
+        .timestamp {
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .message-content {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            padding-left: 48px;
+            word-break: break-word;
+        }
+        
+        .message-actions {
+            padding-left: 48px;
+            margin-top: 12px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #666;
+            font-size: 13px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 0;
+            transition: color 0.2s;
+        }
+        
+        .action-btn:hover {
+            color: #ff2442;
+        }
+        
+        .action-btn.liked {
+            color: #ff2442;
+        }
+        
+        .like-icon {
+            font-size: 16px;
+        }
+        
+        .delete-btn {
+            color: #999;
+            font-size: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 6px;
+            margin-left: auto;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .message-card:hover .delete-btn {
+            opacity: 0.6;
+        }
+        
+        .delete-btn:hover {
+            opacity: 1 !important;
+            color: #ff2442;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            padding: 0 24px;
+        }
+        
+        .filter-btn {
+            padding: 6px 16px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 16px;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn.active {
+            background: #ff2442;
+            color: white;
+            border-color: #ff2442;
+        }
+        
+        .filter-btn:hover {
+            border-color: #ff2442;
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+            
+            .header {
+                padding: 20px 20px 16px;
+            }
+            
+            .input-section {
+                padding: 16px 20px;
+            }
+            
+            .messages-section {
+                padding: 12px 20px;
+            }
+            
+            .message-content {
+                padding-left: 0;
+                margin-top: 12px;
+            }
+            
+            .message-actions {
+                padding-left: 0;
+            }
+            
+            .filter-buttons {
+                padding: 0 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>留言墙</h1>
+            <div class="subtitle">
+                留下你想说的话
+                <span class="count">共 <span id="messageCount">0</span> 条留言</span>
+            </div>
+            
+            <!-- 筛选按钮 -->
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterMessages('all')">全部</button>
+                <button class="filter-btn" onclick="filterMessages('recent')">最新</button>
+                <button class="filter-btn" onclick="filterMessages('popular')">最热</button>
+            </div>
+        </div>
+        
+        <!-- 输入区 -->
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" class="name-input" id="nameInput" 
+                       placeholder="怎么称呼你？" maxlength="20">
+            </div>
+            <textarea class="message-input" id="messageInput" 
+                      placeholder="写下你想说的话...（最多500字）" maxlength="500"></textarea>
+            <button class="submit-btn" id="submitBtn" onclick="submitMessage()">发布留言</button>
+            <div style="clear: both;"></div>
+        </div>
+        
+        <!-- 留言列表 -->
+        <div class="messages-section" id="messagesContainer">
+            <!-- 留言会动态加载到这里 -->
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">💬</div>
+                <p>还没有留言</p>
+                <p class="hint">快来写下第一条留言吧！</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提示弹窗 -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // 数据管理
+        class GuestBook {
+            constructor() {
+                this.key = 'guestbook_messages_v2';
+				this.messages = [];
+    
+    // 等待DOM加载完成
+    //if (document.readyState === 'loading') {
+    //      document.addEventListener('DOMContentLoaded', () => {
+    //        this.loadMessages();
+    //    });
+    //} else {
+    //    this.loadMessages();
+    //}
+	
+				this.loadMessages();
+            }
+			
+            
+            async loadMessages() {
+			  try {
+                const response = await fetch('/api/messages');
+                this.messages = await response.json();
+                this.updateCount();
+			  } catch (error) {
+			    console.error('加载留言失败：', error);
+				this.messages = [];
+			  }
+            }
+            
+            //async saveMessages() {
+            //    localStorage.setItem(this.key, JSON.stringify(this.messages));
+            //    this.updateCount();
+            //}
+            
+            async addMessage(name, content) {
+			  try {
+			    const response = await fetch('/api/messages', {
+				    method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							name: name || '网友',
+							content: content.trim()
+						})
+					});
+				
+					const newMessage = await response.json();
+					this.messages.unshift(newMessage);
+					this.updateCount();
+					return newMessage;
+				} catch (error) {
+					console.error('发布留言失败：', error);
+					throw error;
+				}
+            }
+            
+            async deleteMessage(id) {
+        try {
+            const response = await fetch(`/api/messages/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.ok) {
+                const index = this.messages.findIndex(msg => msg.id === id);
+                if (index !== -1) {
+                    this.messages.splice(index, 1);
+                    this.updateCount();
+                }
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('删除留言失败:', error);
+            return false;
+        }
+    }
+            
+            async toggleLike(id) {
+        try {
+            const response = await fetch(`/api/messages/${id}/like`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                const updatedMessage = await response.json();
+                // 更新本地数据
+                const index = this.messages.findIndex(msg => msg.id === id);
+                if (index !== -1) {
+                    this.messages[index] = updatedMessage;
+                }
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('点赞失败:', error);
+            return false;
+        }
+    }
+            
+            updateCount() {
+                 const countElement = document.getElementById('messageCount');
+    if (countElement) {
+        countElement.textContent = this.messages.length;
+    }
+            }
+            
+            getUserIdentifier() {
+                // 简单标识用户（用于点赞限制）
+                return localStorage.getItem('guestbook_user_id') || 
+                       (localStorage.setItem('guestbook_user_id', Math.random().toString(36).substr(2, 16)), 
+                        localStorage.getItem('guestbook_user_id'));
+            }
+            
+            getMessages(filter = 'all') {
+                let messages = [...this.messages];
+                
+                switch(filter) {
+                    case 'recent':
+                        // 已经是按时间倒序
+                        break;
+                    case 'popular':
+                        messages.sort((a, b) => b.likes - a.likes);
+                        break;
+                    default:
+                        // 全部，按时间倒序
+                        break;
+                }
+                
+                return messages;
+            }
+        }
+        
+        // 全局实例
+        let guestbook;
+        
+        // DOM操作
+        function renderMessages(filter = 'all') {
+            const container = document.getElementById('messagesContainer');
+            const emptyState = document.getElementById('emptyState');
+			
+			  if (!container) {
+        console.error('找不到 messagesContainer 元素');
+        return;
+    }
+			
+            const messages = guestbook.getMessages(filter);
+			
+             console.log("运行正常1")
+			 
+            if (messages.length === 0) {
+    if (emptyState) {
+        emptyState.style.display = 'block';
+        container.innerHTML = '';
+        container.appendChild(emptyState);
+    }
+    return;
+}
+            
+            if (emptyState) {
+    emptyState.style.display = 'none';
+}
+            
+            // 更新筛选按钮状态
+              document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        
+        // 直接从 onclick 属性提取类型
+        const onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr) {
+            // 提取 'all', 'recent', 'popular'
+            const match = onclickAttr.match(/filterMessages\('(\w+)'\)/);
+            if (match && match[1] === filter) {
+                btn.classList.add('active');
+            }
+        }
+    });
+            
+            // 生成留言卡片
+            container.innerHTML = '';
+            messages.forEach(message => {
+                const card = createMessageCard(message);
+                container.appendChild(card);
+            });
+        }
+        
+        function createMessageCard(message) {
+            const card = document.createElement('div');
+            card.className = 'message-card';
+            
+            const timeAgo = getTimeAgo(message.timestamp);
+            const firstChar = message.name.charAt(0).toUpperCase();
+            
+            card.innerHTML = `
+                <div class="message-header">
+                    <div class="avatar">${firstChar}</div>
+                    <div class="user-info">
+                        <div class="username">${escapeHtml(message.name)}</div>
+                        <div class="timestamp">${timeAgo}</div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteMessage('${message.id}')">×</button>
+                </div>
+                <div class="message-content">${formatContent(message.content)}</div>
+                <div class="message-actions">
+                    <button class="action-btn ${message.liked ? 'liked' : ''}" 
+                            onclick="toggleLike('${message.id}')">
+                        <span class="like-icon">${message.liked ? '♥' : '♡'}</span>
+                        <span class="like-count">${message.likes}</span>
+                    </button>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // 发布留言
+        async function submitMessage() {
+            const nameInput = document.getElementById('nameInput');
+            const messageInput = document.getElementById('messageInput');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            const name = nameInput.value.trim();
+            const content = messageInput.value.trim();
+            
+            if (!content) {
+                showToast('请填写留言内容');
+                messageInput.focus();
+                return;
+            }
+            
+            if (content.length > 500) {
+                showToast('留言不能超过500字');
+                return;
+            }
+            
+            // 防重复提交
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
+			
+			try{
+			
+				await guestbook.addMessage(name, content);
+				
+				messageInput.value = '';
+				nameInput.value = '';
+				
+				renderMessages();
+				
+				showToast('留言发布成功！');
+				
+				window.scrollTo({top: 0, behavior: 'smooth'});
+			} catch(error) {
+			     console.error('发布失败：', error);
+				showToast('发布失败，请重试');
+			} finally {
+			
+				submitBtn.disabled = false;
+				submitBtn.textContent = '发布留言';
+			}
+            
+           
+        }
+        
+        // 删除留言 - 改成异步
+async function deleteMessage(id) {
+    if (confirm('确定要删除这条留言吗？')) {
+        if (await guestbook.deleteMessage(id)) {
+            renderMessages();
+            showToast('留言已删除');
+        } else {
+            showToast('删除失败');
+        }
+    }
+}
+
+// 点赞 - 改成异步
+async function toggleLike(id) {
+    if (await guestbook.toggleLike(id)) {
+        renderMessages();
+    }
+}
+        
+        // 筛选留言
+        function filterMessages(type) {
+		
+		// 先更新按钮状态
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        const onclickAttr = btn.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes(`'${type}'`)) {
+            btn.classList.add('active');
+        }
+    });
+            renderMessages(type);
+        }
+        
+        // 工具函数
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            toast.textContent = text;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        function getTimeAgo(timestamp) {
+            const now = Date.now();
+            const diff = now - timestamp;
+            
+            const minute = 60 * 1000;
+            const hour = 60 * minute;
+            const day = 24 * hour;
+            
+            if (diff < minute) return '刚刚';
+            if (diff < hour) return `${Math.floor(diff / minute)}分钟前`;
+            if (diff < day) return `${Math.floor(diff / hour)}小时前`;
+            if (diff < 7 * day) return `${Math.floor(diff / day)}天前`;
+            
+            return new Date(timestamp).toLocaleDateString();
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatContent(content) {
+            // 简单格式化：URL转链接，换行处理
+            return escapeHtml(content)
+                .replace(/\n/g, '<br>')
+                .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+		
+		    guestbook = new GuestBook();
+            try {
+        // 🔥 显示加载状态
+        showToast('加载留言中...');
+        await guestbook.loadMessages();
+        renderMessages();
+		showToast('留言加载完成');
+    } catch (error) {
+        showToast('加载留言失败');
+		console.error('初始化失败:', error);
+    }
+            
+            // 回车提交留言
+            document.getElementById('messageInput').addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    submitMessage();
+                }
+            });
+            
+            // 随机欢迎语
+            const welcomeMessages = [
+                '欢迎来到留言墙！',
+                '分享你的想法吧！',
+                '留下你的足迹～',
+                '想说什么都可以！'
+            ];
+            const randomWelcome = welcomeMessages[Math.floor(Math.random() * welcomeMessages.length)];
+            document.querySelector('.subtitle').textContent = randomWelcome;
+        });
+    </script>
+</body>
+</html>
